@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './App.css'; 
+import SheetMusicTest from './SheetMusicTest';
 
 // frequency (in hertz)
 const noteFrequencies = {
@@ -7,6 +8,14 @@ const noteFrequencies = {
   'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00,
   'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88,
   'C5': 523.25
+};
+
+// abc notation translator
+const abcMapper = {
+  'C4': 'C', 'C#4': '^C', 'D4': 'D', 'D#4': '^D',
+  'E4': 'E', 'F4': 'F', 'F#4': '^F', 'G4': 'G',
+  'G#4': '^G', 'A4': 'A', 'A#4': '^A', 'B4': 'B',
+  'C5': 'c'
 };
 
 // synthesizer
@@ -19,7 +28,7 @@ const playSynthNote = (noteName) => {
   
   // create an oscillator 
   const oscillator = audioCtx.createOscillator();
-  oscillator.type = 'sine'; 
+  oscillator.type = 'triangle'; 
   oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
 
   // create a gain node (the volume knob)
@@ -40,6 +49,7 @@ const playSynthNote = (noteName) => {
 
 function App() {
   const [activeNote, setActiveNote] = useState('None');
+  const [melodyString, setMelodyString] = useState("");
 
   const whiteKeys = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
   
@@ -55,58 +65,84 @@ function App() {
   const handleKeyClick = (note) => {
     setActiveNote(note);
     playSynthNote(note);
+    setMelodyString((prev) => {
+      // count how many actual notes we have 
+      const currentNotes = prev.split(' ').filter(n => n !== '' && n !== '|' && n !== '\n');
+      const noteCount = currentNotes.length;
+
+      let newAddition = abcMapper[note] + " ";
+
+      // add a measure bar every 4 notes
+      if ((noteCount + 1) % 4 === 0) {
+        newAddition += "| ";
+      }
+
+      // force a new staff line below every 16 notes
+      if ((noteCount + 1) % 16 === 0) {
+        newAddition += "\n"; 
+      }
+
+      return prev + newAddition;
+    });
+  };
+
+  // function to handle undoing the last note
+  const handleUndo = () => {
+    setMelodyString((prev) => {
+      const arr = prev.trim().split(' ');
+      if (arr.length === 0 || arr[0] === "") return "";
+      
+      // if the last thing we added was a measure bar or new line, delete it first
+      if (arr[arr.length - 1] === '|' || arr[arr.length - 1] === '\n') {
+        arr.pop();
+      }
+      
+      // delete the actual note
+      arr.pop(); 
+      return arr.length > 0 ? arr.join(' ') + ' ' : '';
+    });
+  };
+
+  // function to reset the entire composition
+  const handleReset = () => {
+    setMelodyString("");
+    setActiveNote('None');
   };
 
   return (
     <div className="app-container">
       <h1>🎹 HarmoCraft Workspace</h1>
-      <div className="status-panel">
-        <h3>Last Note Played: <span className="note-display">{activeNote}</span></h3>
+      <div className="status-panel" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        <h3 style={{ margin: 0, marginRight: '10px' }}>
+          Last Note: <span className="note-display">{activeNote}</span>
+        </h3>
+        
+        {/* undo button*/}
+        <button 
+          onClick={handleUndo}
+          style={{
+            padding: '8px 16px', background: '#e53e3e', color: 'white', 
+            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+          }}
+        >
+          ↩ Undo
+        </button>
+
+        {/* reset button*/}
+        <button 
+          onClick={handleReset}
+          style={{
+            padding: '8px 16px', background: '#718096', color: 'white', 
+            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+          }}
+        >
+          🗑️ Reset
+        </button>
       </div>
 
-      <div className="staff-container">
-        <h3>Musical Staff</h3>
-        <div className="mock-staff">
-          <div className="staff-line"></div> 
-          <div className="staff-line"></div> 
-          <div className="staff-line"></div> 
-          <div className="staff-line"></div> 
-          <div className="staff-line"></div> 
-          
-{activeNote !== 'None' && (
-            <div 
-              className="note-wrapper"
-              style={{ 
-                bottom: 
-                  (activeNote === 'C4' || activeNote === 'C#4') ? '-3px' :
-                  (activeNote === 'D4' || activeNote === 'D#4') ? '9px' :
-                  (activeNote === 'E4')                         ? '21px' :
-                  (activeNote === 'F4' || activeNote === 'F#4') ? '33px' :
-                  (activeNote === 'G4' || activeNote === 'G#4') ? '45px' :
-                  (activeNote === 'A4' || activeNote === 'A#4') ? '57px' :
-                  (activeNote === 'B4')                         ? '69px' :
-                  (activeNote === 'C5')                         ? '81px' : '21px'
-              }}
-            >
-              {/* conditional sharp sign */}
-              {activeNote.includes('#') && <span className="accidental">♯</span>}
-              
-              {/* custom CSS note */}
-              <div className="css-note">
-                <div className="css-note-head"></div>
-                {/* dynamically assign stem direction class */}
-                <div className={`css-stem ${(activeNote === 'B4' || activeNote === 'C5') ? 'stem-down' : 'stem-up'}`}></div>
-              </div>
+      <SheetMusicTest melody={melodyString} />
 
-              {/* conditional ledger line for C4 / C#4 */}
-              {(activeNote === 'C4' || activeNote === 'C#4') && (
-                <div className="ledger-line"></div>
-              )}
-            </div>
-          )}        
-        </div>
-      </div> 
-
+      
       {/* piano keyboard container */}
       <div className="piano-container">
         <div className="piano-keyboard">
