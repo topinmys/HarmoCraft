@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './App.css'; 
 import SheetMusicTest from './SheetMusicTest';
+import Login from './Login';
 
 // frequency (in hertz)
 const noteFrequencies = {
@@ -48,6 +49,7 @@ const playSynthNote = (noteName) => {
 };
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeNote, setActiveNote] = useState('None');
   const [melodyString, setMelodyString] = useState("");
 
@@ -109,71 +111,86 @@ function App() {
     setActiveNote('None');
   };
 
+  // show login page if not authenticated, otherwise show the main app
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
-    <div className="app-container">
-      <h1>🎹 HarmoCraft Workspace</h1>
-      <div className="status-panel" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-        <h3 style={{ margin: 0, marginRight: '10px' }}>
-          Last Note: <span className="note-display">{activeNote}</span>
-        </h3>
-        
-        {/* undo button*/}
-        <button 
-          onClick={handleUndo}
-          style={{
-            padding: '8px 16px', background: '#e53e3e', color: 'white', 
-            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
-          }}
-        >
-          ↩ Undo
-        </button>
-
-        {/* reset button*/}
-        <button 
-          onClick={handleReset}
-          style={{
-            padding: '8px 16px', background: '#718096', color: 'white', 
-            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
-          }}
-        >
-          🗑️ Reset
-        </button>
-      </div>
-
-      <SheetMusicTest melody={melodyString} />
-
-      
-      {/* piano keyboard container */}
-      <div className="piano-container">
-        <div className="piano-keyboard">
+      <div className="app-container">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '30px'   }}>
+          <h1>🎹 HarmoCraft Workspace</h1>
           
-          {/* render white keys */}
-          {whiteKeys.map((note) => (
-            <button 
-              key={note} 
-              className="white-key" 
-              onClick={() => handleKeyClick(note)}
-            >
-              <span className="key-label">{note}</span>
-            </button>
-          ))}
-
-          {/* render black keys overlayed via absolute positions */}
-          {blackKeys.map((key) => (
-            <button
-              key={key.name}
-              className="black-key"
-              style={{ left: `${key.position * 50 - 15}px` }}
-              onClick={() => handleKeyClick(key.name)}
-            >
-              <span className="key-label black-label">{key.name}</span>
-            </button>
-          ))}
-
+          <button 
+            onClick={() => setIsAuthenticated(false)} 
+            className="secondary-btn"
+          >
+            Log Out
+          </button>
         </div>
-      </div>
-    </div> 
-  );
-}
+        
+        <div className="status-panel" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, marginRight: '10px' }}>
+            Last Note: <span className="note-display">{activeNote}</span>
+          </h3>
+          
+          {/* undo button*/}
+          <button 
+            onClick={handleUndo}
+            style={{
+              padding: '8px 16px', background: '#e53e3e', color: 'white', 
+              border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+            }}
+          >
+            ↩ Undo
+          </button>
+
+          {/* reset button*/}
+          <button 
+            onClick={handleReset}
+            style={{
+              padding: '8px 16px', background: '#718096', color: 'white', 
+              border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+            }}
+          >
+            🗑️ Reset
+          </button>
+        </div>
+
+        <SheetMusicTest melody={melodyString} />
+
+        
+        {/* piano keyboard container */}
+        <div className="piano-container">
+          <div className="piano-keyboard">
+            
+            {/* render white keys */}
+            {whiteKeys.map((note) => (
+              <button 
+                key={note} 
+                className="white-key" 
+                onClick={() => handleKeyClick(note)}
+              >
+                <span className="key-label">{note}</span>
+              </button>
+            ))}
+
+            {/* render black keys overlayed via absolute positions */}
+            {blackKeys.map((key) => (
+              <button
+                key={key.name}
+                className="black-key"
+                style={{ left: `${key.position * 50 - 15}px` }}
+                onClick={() => handleKeyClick(key.name)}
+              >
+                <span className="key-label black-label">{key.name}</span>
+              </button>
+            ))}
+
+          </div>
+        </div>
+      </div> 
+    );
+  }
 
 export default App;
