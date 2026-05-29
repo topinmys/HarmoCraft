@@ -67,17 +67,17 @@ graph TD
 
 ### A. Secure Authentication
 
-![Login Screen](./assets/login.png)
+![Login Screen](./src/assets/login.png)
 _Our landing page features conditional rendering and form validation, ensuring passwords meet length and matching criteria before pinging the database._
 
 ### B. User Dashboard
 
-![Home Dashboard](./assets/home.png)
+![Home Dashboard](./src/assets/home.png)
 _The centralized routing hub. By utilizing React state (`currentView`), users can navigate between their profile and the composition workspace without full page reloads._
 
 ### C. Digital Workspace
 
-![Piano Workspace](./assets/workspace.png)
+![Piano Workspace](./src/assets/workspace.png)
 _A custom flexbox layout designed to house the `abcjs` dynamic sheet music renderer and the interactive synthesizer keyboard._
 
 ---
