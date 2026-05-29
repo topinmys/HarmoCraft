@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import abcjs from 'abcjs';
 
-const SheetMusicTest = ({ melody }) => {
+const SheetMusic = ({ melody }) => {
   // create reference to an empty HTML div
   const paperRef = useRef(null);
 
@@ -46,4 +46,4 @@ ${melody}`;
   );
 };
 
-export default SheetMusicTest;
+export default SheetMusic;
