@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
+import { supabase } from './supabase_client';
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
 
   const [message, setMessage] = useState({ text: '', type: '' });
-  const [isSignUpMode, setIsSignUpMode] = useState(false); 
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [registeredUsers, setRegisteredUsers] = useState([]);
 
   // validation helper function for email format
@@ -20,10 +21,13 @@ const Login = ({ onLoginSuccess }) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
   };
 
- // login logic
-  const handleLogin = (e) => {
+  // login logic
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
+
+    console.log('login button click')
+
+    /* 
     // look through array of objects to find a matching email
     const foundUser = registeredUsers.find(user => user.email === email);
 
@@ -36,29 +40,63 @@ const Login = ({ onLoginSuccess }) => {
     } else {
       // email found and password matched
       setMessage({ text: '', type: '' });
-      onLoginSuccess(); 
+      onLoginSuccess();
     }
+    */
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    //console.log("this is data", data);
+    //console.log('this is error', error);
+
+    if (error) {
+      setMessage({
+        text: error.message,
+        type: 'error'
+      });
+      return;
+    }
+
+    setMessage({
+      text: '',
+      type: ''
+    });
+
+    //console.log('login success');
+
+    onLoginSuccess();
   };
 
   // sign up logic
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
-    
+
     if (!isValidEmail(email)) return setMessage({ text: 'Please enter a valid email address.', type: 'error' });
     if (password.length < 6) return setMessage({ text: 'Password must be at least 6 characters.', type: 'error' });
     if (password !== confirmPassword) return setMessage({ text: 'Passwords do not match!', type: 'error' });
-    
+
+    /*
     // check email exists
     const emailAlreadyExists = registeredUsers.some(user => user.email === email);
     if (emailAlreadyExists) return setMessage({ text: 'Account already exists. Please Log In.', type: 'error' });
 
     // save email and password into database
     setRegisteredUsers([...registeredUsers, { email: email, password: password }]);
-    
+    */
+
+    const { data, error } = await supabase.auth.signUp({ email, password });
+
+    if (error) {
+      setMessage({
+        text: error.message,
+        type: 'error'
+      });
+      return;
+    }
+
     setMessage({ text: 'Account created successfully! You can now Log In.', type: 'success' });
     setPassword('');
     setConfirmPassword('');
-    setIsSignUpMode(false); 
+    setIsSignUpMode(false);
   };
 
   return (
@@ -74,7 +112,7 @@ const Login = ({ onLoginSuccess }) => {
         )}
 
         <form className="login-form" onSubmit={isSignUpMode ? handleSignUp : handleLogin}>
-          
+
           <div className="input-group">
             <label>Email</label>
             <input
@@ -90,7 +128,7 @@ const Login = ({ onLoginSuccess }) => {
             <label>Password</label>
             <div className="password-wrapper">
               <input
-                type={showPassword ? "text" : "password"} 
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -99,16 +137,16 @@ const Login = ({ onLoginSuccess }) => {
               <button
                 type="button"
                 className="reveal-btn"
-                onPointerDown={() => setShowPassword(true)}   
-                onPointerUp={() => setShowPassword(false)}    
-                onPointerLeave={() => setShowPassword(false)} 
+                onPointerDown={() => setShowPassword(true)}
+                onPointerUp={() => setShowPassword(false)}
+                onPointerLeave={() => setShowPassword(false)}
               >
                 {showPassword ? '🙈' : '👁️'}
               </button>
             </div>
           </div>
 
-        {isSignUpMode && (
+          {isSignUpMode && (
             <div className="input-group">
               <label>Confirm Password</label>
               <div className="password-wrapper">
@@ -130,7 +168,7 @@ const Login = ({ onLoginSuccess }) => {
                 </button>
               </div>
             </div>
-          )}            
+          )}
 
           <div className="button-group">
             {isSignUpMode ? (
@@ -145,7 +183,7 @@ const Login = ({ onLoginSuccess }) => {
                 <button type="submit" className="primary-btn">Log In</button>
                 <button type="button" className="secondary-btn" onClick={() => {
                   setIsSignUpMode(true);
-                  setMessage({ text: '', type: '' }); 
+                  setMessage({ text: '', type: '' });
                 }}>
                   Create New Account
                 </button>

@@ -1,6 +1,7 @@
 import React from "react";
+import { supabase } from "./supabase_client";
 
-function Profile({ setView }) {
+function Profile({ setView, user }) {
   return (
     <div
       style={{
@@ -21,7 +22,7 @@ function Profile({ setView }) {
         }}
       >
         <p>
-          <strong>Email:</strong> User details will go here
+          <strong>Email:</strong> {user?.email}
         </p>
         <p>
           <strong>Saved Melodies:</strong> 0
