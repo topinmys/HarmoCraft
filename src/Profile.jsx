@@ -1,5 +1,4 @@
 import React from "react";
-import { supabase } from "./supabase_client";
 
 function Profile({ setView, user }) {
   return (

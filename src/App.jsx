@@ -17,7 +17,7 @@ function App() {
     const getSession = async () => {
       const { data: { session }, } = await supabase.auth.getSession();
 
-      console.log("Initial session:", session);
+      // console.log("Initial session:", session);
 
       setSession(session);
       setLoading(false);
@@ -26,7 +26,7 @@ function App() {
     getSession();
 
     const { data: { subscription }, } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth changed:", session);
+      // console.log("Auth changed:", session);
 
       setSession(session);
     });
@@ -59,7 +59,7 @@ function App() {
         <Home setView={setCurrentView} onLogout={handleLogout} />
       )}
       {currentView === "workspace" && <Workspace setView={setCurrentView} />}
-      {currentView === "profile" && <Profile setView={setCurrentView} />}
+      {currentView === "profile" && <Profile setView={setCurrentView} user={session?.user} />}
     </div>
   );
 }

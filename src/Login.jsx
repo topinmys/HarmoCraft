@@ -25,7 +25,7 @@ const Login = ({ onLoginSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    console.log('login button click')
+    //console.log('login button click')
 
     /* 
     // look through array of objects to find a matching email
@@ -84,6 +84,11 @@ const Login = ({ onLoginSuccess }) => {
     */
 
     const { data, error } = await supabase.auth.signUp({ email, password });
+
+    // console.log('this is signUp data', data);
+    // console.log('this is signUp error', error);
+
+
 
     if (error) {
       setMessage({
