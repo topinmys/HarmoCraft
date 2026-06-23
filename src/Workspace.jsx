@@ -3,6 +3,18 @@ import SheetMusic from "./SheetMusic";
 
 // frequency (in hertz)
 const noteFrequencies = {
+  C3: 130.81,
+  "C#3": 138.59,
+  D3: 146.83,
+  "D#3": 155.56,
+  E3: 164.81,
+  F3: 174.61,
+  "F#3": 185.0,
+  G3: 196.0,
+  "G#3": 207.65,
+  A3: 220.0,
+  "A#3": 233.08,
+  B3: 246.94,
   C4: 261.63,
   "C#4": 277.18,
   D4: 293.66,
@@ -16,10 +28,34 @@ const noteFrequencies = {
   "A#4": 466.16,
   B4: 493.88,
   C5: 523.25,
+  "C#5": 554.37,
+  D5: 587.33,
+  "D#5": 622.25,
+  E5: 659.25,
+  F5: 698.46,
+  "F#5": 739.99,
+  G5: 783.99,
+  "G#5": 830.61,
+  A5: 880.0,
+  "A#5": 932.33,
+  B5: 987.77,
+  C6: 1046.5,
 };
 
 // abc notation translator
 const abcMapper = {
+  C3: "C,",
+  "C#3": "^C,",
+  D3: "D,",
+  "D#3": "^D,",
+  E3: "E,",
+  F3: "F,",
+  "F#3": "^F,",
+  G3: "G,",
+  "G#3": "^G,",
+  A3: "A,",
+  "A#3": "^A,",
+  B3: "B,",
   C4: "C",
   "C#4": "^C",
   D4: "D",
@@ -33,6 +69,18 @@ const abcMapper = {
   "A#4": "^A",
   B4: "B",
   C5: "c",
+  "C#5": "^c",
+  D5: "d",
+  "D#5": "^d",
+  E5: "e",
+  F5: "f",
+  "F#5": "^f",
+  G5: "g",
+  "G#5": "^g",
+  A5: "a",
+  "A#5": "^a",
+  B5: "b",
+  C6: "c'",
 };
 
 // synthesizer
@@ -68,14 +116,50 @@ export default function Workspace({ setView }) {
   const [activeNote, setActiveNote] = useState("None");
   const [melodyString, setMelodyString] = useState("");
 
-  const whiteKeys = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
+  const whiteKeys = [
+    "C3",
+    "D3",
+    "E3",
+    "F3",
+    "G3",
+    "A3",
+    "B3",
+    "C4",
+    "D4",
+    "E4",
+    "F4",
+    "G4",
+    "A4",
+    "B4",
+    "C5",
+    "D5",
+    "E5",
+    "F5",
+    "G5",
+    "A5",
+    "B5",
+    "C6",
+  ];
 
   const blackKeys = [
-    { name: "C#4", position: 1 },
-    { name: "D#4", position: 2 },
-    { name: "F#4", position: 4 },
-    { name: "G#4", position: 5 },
-    { name: "A#4", position: 6 },
+    // Octave 3
+    { name: "C#3", position: 1 },
+    { name: "D#3", position: 2 },
+    { name: "F#3", position: 4 },
+    { name: "G#3", position: 5 },
+    { name: "A#3", position: 6 },
+    // Octave 4
+    { name: "C#4", position: 8 },
+    { name: "D#4", position: 9 },
+    { name: "F#4", position: 11 },
+    { name: "G#4", position: 12 },
+    { name: "A#4", position: 13 },
+    // Octave 5
+    { name: "C#5", position: 15 },
+    { name: "D#5", position: 16 },
+    { name: "F#5", position: 18 },
+    { name: "G#5", position: 19 },
+    { name: "A#5", position: 20 },
   ];
 
   // function to handle key clicks
