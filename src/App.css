@@ -272,3 +272,77 @@ input:-webkit-autofill:focus {
 
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* =========================================
+   CHORD SETUP CONTROL PANEL
+   ========================================= */
+.control-panel {
+  display: flex;
+  gap: 40px;
+  background: white;
+  padding: 15px 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  width: max-content;
+  max-width: 90vw;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-group-wrapper {
+  display: flex;
+  gap: 20px;
+}
+
+.control-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.control-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.control-select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  cursor: pointer;
+  outline: none;
+  background-color: white;
+  color: #222;
+  min-width: 180px;
+}
+
+.chord-display-box {
+  background: #f7f9fa;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  max-width: 550px;
+}
+
+.chord-display-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #a0aec0;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.chord-display-text {
+  font-size: 18px;
+  font-weight: 900;
+  color: #2d3748;
+  letter-spacing: 2px;
+  line-height: 1.8;
+  display: block;
+}
