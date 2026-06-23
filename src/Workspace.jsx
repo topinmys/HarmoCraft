@@ -83,6 +83,125 @@ const abcMapper = {
   C6: "c'",
 };
 
+// 16 bars progression logic (64 beats total)
+const chordProgressions = {
+  "C Major": {
+    // a massive pop journey: verse -> pre-chorus -> huge chorus -> resolution
+    Pop: [
+      "C",
+      "G",
+      "Am",
+      "F",
+      "C",
+      "G",
+      "F",
+      "C",
+      "Am",
+      "F",
+      "C",
+      "G",
+      "Dm",
+      "F",
+      "G",
+      "C",
+    ],
+    // deep melancholy that shifts around before settling back into the minor key
+    Melancholy: [
+      "Am",
+      "F",
+      "C",
+      "G",
+      "Am",
+      "Em",
+      "F",
+      "G",
+      "Am",
+      "F",
+      "C",
+      "G",
+      "Dm",
+      "Am",
+      "Em",
+      "Am",
+    ],
+    // a smooth, wandering R&B progression that ends on a classic turnaround
+    "Jazz / R&B": [
+      "Dm",
+      "G",
+      "C",
+      "Am",
+      "Dm",
+      "G",
+      "C",
+      "Am",
+      "F",
+      "G",
+      "Em",
+      "Am",
+      "Dm",
+      "G",
+      "C",
+      "C",
+    ],
+  },
+  "G Major": {
+    Pop: [
+      "G",
+      "D",
+      "Em",
+      "C",
+      "G",
+      "D",
+      "C",
+      "G",
+      "Em",
+      "C",
+      "G",
+      "D",
+      "Am",
+      "C",
+      "D",
+      "G",
+    ],
+    Melancholy: [
+      "Em",
+      "C",
+      "G",
+      "D",
+      "Em",
+      "Bm",
+      "C",
+      "D",
+      "Em",
+      "C",
+      "G",
+      "D",
+      "Am",
+      "Em",
+      "Bm",
+      "Em",
+    ],
+    "Jazz / R&B": [
+      "Am",
+      "D",
+      "G",
+      "Em",
+      "Am",
+      "D",
+      "G",
+      "Em",
+      "C",
+      "D",
+      "Bm",
+      "Em",
+      "Am",
+      "D",
+      "G",
+      "G",
+    ],
+  },
+};
+
 // synthesizer
 const playSynthNote = (noteName) => {
   const frequency = noteFrequencies[noteName];
@@ -115,6 +234,10 @@ const playSynthNote = (noteName) => {
 export default function Workspace({ setView }) {
   const [activeNote, setActiveNote] = useState("None");
   const [melodyString, setMelodyString] = useState("");
+  const [selectedKey, setSelectedKey] = useState("C Major");
+  const [selectedStyle, setSelectedStyle] = useState("Pop");
+
+  const currentChords = chordProgressions[selectedKey][selectedStyle];
 
   const whiteKeys = [
     "C3",
@@ -275,6 +398,62 @@ export default function Workspace({ setView }) {
         >
           🗑️ Reset
         </button>
+      </div>
+      {/* --- CHORD SETUP CONTROL PANEL --- */}
+      <div className="control-panel">
+        <div className="control-group-wrapper">
+          {/* Key Signature Dropdown */}
+          <div className="control-input-group">
+            <label className="control-label">Key Signature</label>
+            <select
+              value={selectedKey}
+              onChange={(e) => setSelectedKey(e.target.value)}
+              className="control-select"
+            >
+              <option value="C Major">C Major (Easy)</option>
+              <option value="G Major">G Major (1 Sharp)</option>
+            </select>
+          </div>
+
+          {/* Progression Style Dropdown */}
+          <div className="control-input-group">
+            <label className="control-label">Progression Style</label>
+            <select
+              value={selectedStyle}
+              onChange={(e) => setSelectedStyle(e.target.value)}
+              className="control-select"
+            >
+              <option value="Pop">Pop (Upbeat)</option>
+              <option value="Melancholy">Melancholy (Sad)</option>
+              <option value="Jazz / R&B">Jazz / R&B (Smooth)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Dynamic Chord Display */}
+        <div
+          className="chord-display-box"
+          style={{ maxWidth: "none", padding: "10px 40px" }}
+        >
+          <span className="chord-display-label">
+            GENERATED CHORDS (64 BEATS)
+          </span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              marginTop: "8px",
+            }}
+          >
+            <span className="chord-display-text">
+              {currentChords.slice(0, 8).join(" - ")}
+            </span>
+            <span className="chord-display-text">
+              {currentChords.slice(8, 16).join(" - ")}
+            </span>
+          </div>
+        </div>
       </div>
       <SheetMusic melody={melodyString} />
       <div className="piano-container">
