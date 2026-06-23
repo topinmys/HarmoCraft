@@ -15,7 +15,9 @@ function App() {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session }, } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       // console.log("Initial session:", session);
 
@@ -25,14 +27,16 @@ function App() {
 
     getSession();
 
-    const { data: { subscription }, } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       // console.log("Auth changed:", session);
 
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
-  });
+  }, []);
 
   const handleLoginSuccess = () => {
     //setIsAuthenticated(true);
@@ -49,9 +53,11 @@ function App() {
   // if (!isAuthenticated) {
   //   return <Login onLoginSuccess={handleLoginSuccess} />;
   // }
-  if (!session) {
-    return <Login onLoginSuccess={handleLoginSuccess} />
-  }
+
+  //herreeeeeeeeeeeee
+  // if (!session) {
+  //   return <Login onLoginSuccess={handleLoginSuccess} />;
+  // }
 
   return (
     <div className="app-container">
@@ -59,7 +65,9 @@ function App() {
         <Home setView={setCurrentView} onLogout={handleLogout} />
       )}
       {currentView === "workspace" && <Workspace setView={setCurrentView} />}
-      {currentView === "profile" && <Profile setView={setCurrentView} user={session?.user} />}
+      {currentView === "profile" && (
+        <Profile setView={setCurrentView} user={session?.user} />
+      )}
     </div>
   );
 }
