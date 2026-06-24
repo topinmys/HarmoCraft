@@ -236,6 +236,8 @@ export default function Workspace({ setView }) {
   const [melodyString, setMelodyString] = useState("");
   const [selectedKey, setSelectedKey] = useState("C Major");
   const [selectedStyle, setSelectedStyle] = useState("Pop");
+  const [activeDuration, setActiveDuration] = useState("Crotchet");
+  const [warningMessage, setWarningMessage] = useState("");
 
   const currentChords = chordProgressions[selectedKey][selectedStyle];
 
@@ -287,24 +289,62 @@ export default function Workspace({ setView }) {
 
   // function to handle key clicks
   const handleKeyClick = (note) => {
+    const translated = abcMapper[note];
+    if (!translated) return;
+
+    // do math before updating the sheet music
+    const currentBeats = calculateBeats(melodyString);
+    const durationValue =
+      activeDuration === "Quaver" ? 0.5 : activeDuration === "Minim" ? 2 : 1;
+
+    // overflow guard
+    // calculate beats currently inside this specific 4-beat measure
+    const currentMeasureBeats = currentBeats % 4;
+
+    // if note overflows the measure, block the click
+    if (currentMeasureBeats + durationValue > 4) {
+      setWarningMessage(
+        `⚠️ Not enough space! A ${activeDuration} (${durationValue} beats) doesn't fit here.`,
+      );
+      return;
+    }
+
+    // block if they exceed the 64 beat song limit
+    if (currentBeats + durationValue > 64) {
+      setWarningMessage(
+        "⚠️ Song is full! (64 beats max). Time to save your masterpiece.",
+      );
+      return;
+    }
+
+    // if valid, clear any previous warning messages, play sound and update state
+    setWarningMessage("");
     setActiveNote(note);
     playSynthNote(note);
     setMelodyString((prev) => {
-      // count how many actual notes we have
-      const currentNotes = prev
-        .split(" ")
-        .filter((n) => n !== "" && n !== "|" && n !== "\n");
-      const noteCount = currentNotes.length;
+      const prevBeats = calculateBeats(prev);
+      const modifier = getDurationModifier();
 
-      let newAddition = abcMapper[note] + " ";
+      // add the duration modifier to the note (e.g. C -> C/2 for quaver)
+      let newAddition = translated + modifier;
 
-      // add a measure bar every 4 notes
-      if ((noteCount + 1) % 4 === 0) {
+      // proper music theory beaming: connect quavers in pairs to form 1 beat
+      if (activeDuration === "Quaver" && currentBeats % 1 === 0) {
+        // first quaver of the beat: no space, so the next note connects
+      } else {
+        // end of a beat, or its a larger note: add a space to break the beam
+        newAddition += " ";
+      }
+
+      // barline and measure math
+      const totalBeats = currentBeats + durationValue;
+      // add a measure bar every 4 beats
+      if (totalBeats % 4 === 0) {
         newAddition += "| ";
       }
 
-      // force a new staff line below every 16 notes
-      if ((noteCount + 1) % 16 === 0) {
+      // force a new staff line below every 16 beats
+      if (totalBeats % 16 === 0) {
         newAddition += "\n";
       }
 
@@ -312,20 +352,46 @@ export default function Workspace({ setView }) {
     });
   };
 
+  const handleRest = () => {
+    const currentBeats = calculateBeats(melodyString);
+    const durationValue =
+      activeDuration === "Quaver" ? 0.5 : activeDuration === "Minim" ? 2 : 1;
+
+    // overflow guard for rests
+    const currentMeasureBeats = currentBeats % 4;
+    if (currentMeasureBeats + durationValue > 4) {
+      setWarningMessage(
+        `⚠️ Not enough space! A ${activeDuration} rest doesn't fit here.`,
+      );
+      return;
+    }
+    if (currentBeats + durationValue > 64) {
+      setWarningMessage("⚠️ Song is full! (64 beats max).");
+      return;
+    }
+
+    setWarningMessage("");
+    setActiveNote("Rest");
+    setMelodyString((prev) => {
+      const prevBeats = calculateBeats(prev);
+      const modifier = getDurationModifier();
+
+      let newAddition = "z" + modifier + " "; // rests always get spaces
+
+      const totalBeats = currentBeats + durationValue;
+      if (totalBeats % 4 === 0) newAddition += "| ";
+      if (totalBeats % 16 === 0) newAddition += "\n";
+
+      return prev + newAddition;
+    });
+  };
+
   // function to handle undoing the last note
   const handleUndo = () => {
+    setWarningMessage("");
     setMelodyString((prev) => {
-      const arr = prev.trim().split(" ");
-      if (arr.length === 0 || arr[0] === "") return "";
-
-      // if the last thing we added was a measure bar or new line, delete it first
-      if (arr[arr.length - 1] === "|" || arr[arr.length - 1] === "\n") {
-        arr.pop();
-      }
-
-      // delete the actual note
-      arr.pop();
-      return arr.length > 0 ? arr.join(" ") + " " : "";
+      // safely removes the last note or rest, even if it's connected/beamed
+      return prev.replace(/[\^_=]?[a-zA-Zz][,'0-9]*(\/[0-9]+)?[\s|\n]*$/, "");
     });
   };
 
@@ -334,6 +400,30 @@ export default function Workspace({ setView }) {
     setMelodyString("");
     setActiveNote("None");
   };
+
+  // function to translate our duration into ABC notation
+  const getDurationModifier = () => {
+    if (activeDuration === "Quaver") return "/2";
+    if (activeDuration === "Minim") return "2";
+    return "";
+  };
+
+  // counts true musical beats instead of just clicks
+  const calculateBeats = (abcString) => {
+    // Matches all notes/rests including accidentals (^C) and durations (C2, z/2)
+    const tokens =
+      abcString.match(/[\^_=]?[a-zA-Zz][,'0-9]*(\/[0-9]+)?/g) || [];
+    let beats = 0;
+    tokens.forEach((token) => {
+      if (token.includes("/2")) beats += 0.5;
+      else if (token.includes("2")) beats += 2;
+      else beats += 1;
+    });
+    return beats;
+  };
+
+  // if string isn't empty, they have started composing
+  const hasStartedComposing = melodyString.trim().length > 0;
 
   return (
     <div
@@ -352,76 +442,58 @@ export default function Workspace({ setView }) {
           justifyContent: "space-between",
           alignItems: "center",
           width: "100%",
-          marginBottom: "30px",
+          marginBottom: "15px",
         }}
       >
-        <h1 style={{ margin: 0 }}>🎹 HarmoCraft Workspace</h1>
+        <h1 style={{ margin: 0, fontSize: "24px" }}>🎹 HarmoCraft Workspace</h1>
 
-        <button onClick={() => setView("home")} className="secondary-btn">
+        <button
+          style={{ fontSize: "14px", padding: "6px 12px" }}
+          onClick={() => setView("home")}
+          className="secondary-btn"
+        >
           ← Back to Home
         </button>
       </div>
-      <div
-        className="status-panel"
-        style={{ display: "flex", gap: "15px", alignItems: "center" }}
-      >
-        <h3 style={{ margin: 0, marginRight: "10px" }}>
-          Last Note: <span className="note-display">{activeNote}</span>
-        </h3>
-
-        <button
-          onClick={handleUndo}
-          style={{
-            padding: "8px 16px",
-            background: "#e53e3e",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          ↩ Undo
-        </button>
-
-        <button
-          onClick={handleReset}
-          style={{
-            padding: "8px 16px",
-            background: "#718096",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          🗑️ Reset
-        </button>
-      </div>
-      {/* --- CHORD SETUP CONTROL PANEL --- */}
+      {/* chord setup control panel */}
       <div className="control-panel">
         <div className="control-group-wrapper">
-          {/* Key Signature Dropdown */}
+          {/* key signature dropdown */}
           <div className="control-input-group">
             <label className="control-label">Key Signature</label>
             <select
               value={selectedKey}
               onChange={(e) => setSelectedKey(e.target.value)}
               className="control-select"
+              disabled={hasStartedComposing}
             >
               <option value="C Major">C Major (Easy)</option>
               <option value="G Major">G Major (1 Sharp)</option>
             </select>
           </div>
 
-          {/* Progression Style Dropdown */}
+          {/* progression style dropdown */}
           <div className="control-input-group">
-            <label className="control-label">Progression Style</label>
+            <label className="control-label">
+              Progression Style
+              {hasStartedComposing && (
+                <span
+                  style={{
+                    color: "#e53e3e",
+                    marginLeft: "5px",
+                    textTransform: "none",
+                    fontSize: "10px",
+                  }}
+                >
+                  (Locked)
+                </span>
+              )}
+            </label>{" "}
             <select
               value={selectedStyle}
               onChange={(e) => setSelectedStyle(e.target.value)}
               className="control-select"
+              disabled={hasStartedComposing}
             >
               <option value="Pop">Pop (Upbeat)</option>
               <option value="Melancholy">Melancholy (Sad)</option>
@@ -430,7 +502,7 @@ export default function Workspace({ setView }) {
           </div>
         </div>
 
-        {/* Dynamic Chord Display */}
+        {/* dynamic chord display */}
         <div
           className="chord-display-box"
           style={{ maxWidth: "none", padding: "10px 40px" }}
@@ -455,7 +527,152 @@ export default function Workspace({ setView }) {
           </div>
         </div>
       </div>
-      <SheetMusic melody={melodyString} />
+      <SheetMusic melody={melodyString} selectedKey={selectedKey} />
+      {/* --- MASTER COMMAND CENTER --- */}
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          marginBottom: "10px",
+          background: "#f7f9fa",
+          padding: "10px",
+          borderRadius: "8px",
+          border: "1px solid #e2e8f0",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            padding: "6px 12px",
+            borderRadius: "6px",
+            border: "1px solid #cbd5e0",
+            fontWeight: "bold",
+            color: "#4a5568",
+            minWidth: "80px",
+            textAlign: "center",
+            fontSize: "14px",
+          }}
+        >
+          Note:{" "}
+          <span style={{ color: "#007acc" }}>
+            {activeNote === "Rest" ? "Rest" : activeNote || "-"}
+          </span>
+        </div>
+
+        <div
+          style={{
+            width: "2px",
+            height: "24px",
+            background: "#cbd5e0",
+            margin: "0 5px",
+          }}
+        ></div>
+        {/* Note Durations */}
+        {["Quaver", "Crotchet", "Minim"].map((duration) => (
+          <button
+            key={duration}
+            onClick={() => setActiveDuration(duration)}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              border: "none",
+              background:
+                activeDuration === duration ? "#007acc" : "transparent",
+              color: activeDuration === duration ? "white" : "#4a5568",
+              transition: "all 0.2s",
+            }}
+          >
+            {duration === "Quaver" && "♪ Quaver (1/2)"}
+            {duration === "Crotchet" && "♩ Crotchet (1)"}
+            {duration === "Minim" && "𝅗𝅥 Minim (2)"}
+          </button>
+        ))}
+
+        {/* Clean visual divider */}
+        <div
+          style={{
+            width: "2px",
+            height: "30px",
+            background: "#cbd5e0",
+            margin: "0 10px",
+          }}
+        ></div>
+
+        {/* The Dynamic Rest Button */}
+        <button
+          onClick={handleRest}
+          style={{
+            padding: "10px 20px",
+            background: "#edf2f7",
+            color: "#4a5568",
+            border: "1px solid #cbd5e0",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          ⏸️ Insert Rest (
+          {activeDuration === "Quaver"
+            ? "1/2"
+            : activeDuration === "Minim"
+              ? "2"
+              : "1"}
+          )
+        </button>
+        {/* Undo and Reset Buttons */}
+        <button
+          onClick={handleUndo}
+          style={{
+            padding: "8px 16px",
+            background: "#e53e3e",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          ↩ Undo
+        </button>
+
+        <button
+          onClick={() => {
+            setMelodyString("");
+            setWarningMessage("");
+          }}
+          style={{
+            padding: "8px 16px",
+            background: "#718096",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          🗑️ Reset
+        </button>
+      </div>
+      {/* --- WARNING MESSAGE UI --- */}
+      <div
+        style={{
+          height:
+            "24px" /* Fixed height so the keyboard doesn't jump up and down */,
+          color: "#e53e3e" /* Bold red color */,
+          fontWeight: "bold",
+          fontSize: "14px",
+          textAlign: "center",
+          marginBottom: "10px",
+          transition: "opacity 0.2s",
+          opacity: warningMessage ? 1 : 0 /* Fades in and out */,
+        }}
+      >
+        {warningMessage}
+      </div>
       <div className="piano-container">
         <div className="piano-keyboard">
           {whiteKeys.map((note) => (

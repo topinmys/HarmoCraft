@@ -278,12 +278,12 @@ input:-webkit-autofill:focus {
    ========================================= */
 .control-panel {
   display: flex;
-  gap: 40px;
+  gap: 20px;
   background: white;
-  padding: 15px 25px;
-  border-radius: 12px;
+  padding: 8px 20px;
+  border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   width: max-content;
   max-width: 90vw;
   box-sizing: border-box;
@@ -303,27 +303,34 @@ input:-webkit-autofill:focus {
 }
 
 .control-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   color: #666;
   text-transform: uppercase;
 }
 
 .control-select {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   outline: none;
   background-color: white;
   color: #222;
-  min-width: 180px;
+  min-width: 140px;
+}
+
+.control-select:disabled {
+  background-color: #edf2f7;
+  color: #a0aec0;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
 }
 
 .chord-display-box {
   background: #f7f9fa;
-  padding: 10px 20px;
+  padding: 6px 16px;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   text-align: center;
@@ -331,7 +338,7 @@ input:-webkit-autofill:focus {
 }
 
 .chord-display-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   color: #a0aec0;
   display: block;
@@ -339,10 +346,10 @@ input:-webkit-autofill:focus {
 }
 
 .chord-display-text {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 900;
   color: #2d3748;
-  letter-spacing: 2px;
-  line-height: 1.8;
+  letter-spacing: 1.5px;
+  line-height: 1.5;
   display: block;
 }
