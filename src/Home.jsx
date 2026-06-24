@@ -32,7 +32,7 @@ function Home({ setView, onLogout }) {
           marginTop: "40px",
         }}
       >
-        {/* These buttons trigger the Traffic Cop to change the page! */}
+        {/* buttons trigger to change the page*/}
         <button onClick={() => setView("workspace")} className="primary-btn">
           🎹 Enter Piano Workspace
         </button>
