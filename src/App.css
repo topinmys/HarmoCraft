@@ -41,20 +41,24 @@
   width: max-content;
   max-width: 90vw;
   overflow-x: auto;
+  margin: 0 auto;
 }
 
 .piano-keyboard {
   position: relative;
   display: flex;
   height: 200px;
-  width: 400px;
-  width: 1100px;
+  width: max-content;
 }
 
 .white-key {
   width: 50px;
   height: 100%;
-  background: white;
+  background: linear-gradient(
+    to bottom,
+    white 45%,
+    var(--key-tint, white) 100%
+  );
   border: 1px solid #ccc;
   border-radius: 0 0 4px 4px;
   box-sizing: border-box;
@@ -65,16 +69,17 @@
   justify-content: center;
   padding-bottom: 15px;
   z-index: 1;
+  transition: background 0.3s ease;
 }
 
 .white-key:active {
-  background: #e0e0e0;
+  filter: brightness(0.9);
 }
 
 .black-key {
   width: 30px;
   height: 120px;
-  background: #111;
+  background: linear-gradient(to bottom, #111 60%, var(--key-tint, #111) 100%);
   border: 1px solid #000;
   border-radius: 0 0 3px 3px;
   position: absolute;
@@ -89,7 +94,7 @@
 }
 
 .black-key:active {
-  background: #333;
+  filter: brightness(1.5);
 }
 
 .key-label {
@@ -352,4 +357,12 @@ input:-webkit-autofill:focus {
   letter-spacing: 1.5px;
   line-height: 1.5;
   display: block;
+}
+
+.abcjs-title {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif !important;
+  font-weight: 600 !important;
+  fill: #2d3748 !important;
 }
