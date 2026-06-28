@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import SheetMusic from "./SheetMusic";
 import {
   noteFrequencies,
@@ -12,6 +12,9 @@ import Piano from "./Piano";
 import Scratchpad from "./Scratchpad";
 import WelcomeModal from "./WelcomeModal";
 import Toolbar from "./Toolbar";
+import { supabase } from "./supabase_client"
+import ABCJS from "abcjs";
+import { renderAbc } from "abcjs";
 
 // synthesizer
 const playSynthNote = (noteName) => {
@@ -42,7 +45,7 @@ const playSynthNote = (noteName) => {
   oscillator.stop(audioCtx.currentTime + 1.5);
 };
 
-export default function Workspace({ setView }) {
+export default function Workspace({ setView, user }) {
   const [activeNote, setActiveNote] = useState("None");
   const [melodyString, setMelodyString] = useState("");
   const [selectedKey, setSelectedKey] = useState("C Major");
@@ -54,6 +57,61 @@ export default function Workspace({ setView }) {
   const [history, setHistory] = useState([]);
   const [isTipVisible, setIsTipVisible] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+
+  //fetch data from last time
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase
+        .from("melodies")
+        .select("melody")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!data) {
+        const { data: newData, error: err } = await supabase
+          .from("melodies")
+          .insert([{
+            user_id: user.id,
+            melody: "",
+          }])
+          .select()
+          .single();
+
+        if (err) {
+          console.error(err);
+          return;
+        }
+
+        setMelodyString(newData.melody);
+      } else {
+        setMelodyString(data.melody);
+      }
+
+      setLoading(false);
+    }
+
+    fetchData();
+  }, []);
+
+  //autosave after 1 sec
+  useEffect(() => {
+    const time = setTimeout(async () => {
+      const { error } = await supabase
+        .from("melodies")
+        .update({
+          melody: melodyString,
+          key_signature: selectedKey,
+          progression_style: selectedStyle
+        })
+        .eq("user_id", user.id)
+
+      if (error) {
+        console.log(error);
+      }
+    }, 1000);
+
+    return () => clearTimeout(time);
+  }, [melodyString, selectedKey, selectedStyle]);
 
   // toast notification fader logic
   useEffect(() => {

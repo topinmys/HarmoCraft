@@ -49,22 +49,21 @@ function App() {
     setCurrentView("home");
   };
 
-  // show login page if not authenticated, otherwise show the main app
+  // //show login page if not authenticated, otherwise show the main app
   // if (!isAuthenticated) {
   //   return <Login onLoginSuccess={handleLoginSuccess} />;
   // }
 
-  //herreeeeeeeeeeeee
-  // if (!session) {
-  //   return <Login onLoginSuccess={handleLoginSuccess} />;
-  // }
+  if (!session) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="app-container">
       {currentView === "home" && (
         <Home setView={setCurrentView} onLogout={handleLogout} />
       )}
-      {currentView === "workspace" && <Workspace setView={setCurrentView} />}
+      {currentView === "workspace" && <Workspace setView={setCurrentView} user={session?.user} />}
       {currentView === "profile" && (
         <Profile setView={setCurrentView} user={session?.user} />
       )}
