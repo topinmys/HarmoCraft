@@ -86,8 +86,6 @@ export default function Workspace({ setView, user }) {
       } else {
         setMelodyString(data.melody);
       }
-
-      setLoading(false);
     }
 
     fetchData();
