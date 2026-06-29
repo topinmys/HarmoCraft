@@ -554,7 +554,7 @@ export default function Workspace({ setView, user }) {
           marginBottom: "20px",
         }}
       >
-        <SheetMusic melody={displayString} selectedKey={selectedKey} />
+        <SheetMusic melody={displayString} selectedKey={selectedKey} chord={activeProgression} />
         <Toolbar
           activeChord={activeChord}
           activeNote={activeNote}
