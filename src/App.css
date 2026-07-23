@@ -1,15 +1,14 @@
 .app-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   font-family: "Segoe UI", Geneva, Verdana, sans-serif;
   padding: 40px;
   background-color: #f7f9fa;
   min-height: 100vh;
-  width: 100%;
+  min-width: 1250px;
   box-sizing: border-box;
 }
-
 .app-container h1 {
   color: #222;
   margin: 0;
@@ -37,7 +36,6 @@
   padding: 20px 30px;
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  margin-bottom: 40px;
   width: max-content;
   max-width: 90vw;
   overflow-x: auto;
@@ -187,7 +185,7 @@
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .primary-btn:hover {
@@ -203,11 +201,69 @@
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .secondary-btn:hover {
   background: #f0f8ff;
+}
+
+.btn-generate {
+  background-color: #fff;
+  color: #222;
+  border: 1px solid #ccc;
+  transition: background-color 0.2s ease;
+}
+.btn-generate:hover {
+  background-color: #edf2f7;
+}
+
+.btn-danger {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+.btn-danger:hover {
+  background-color: #c53030;
+}
+
+.btn-neutral {
+  background-color: #718096;
+  color: white;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+.btn-neutral:hover {
+  background-color: #4a5568;
+}
+
+.btn-light {
+  background-color: #edf2f7;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  transition: background-color 0.2s ease;
+}
+.btn-light:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-duration-inactive {
+  background-color: transparent;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  transition: all 0.2s ease;
+}
+.btn-duration-inactive:hover {
+  background-color: #edf2f7;
+  border-color: #a0aec0;
+}
+
+.btn-duration-active {
+  background-color: #007acc;
+  color: white;
+  border: 1px solid #007acc;
+  transition: all 0.2s ease;
 }
 
 .alert-message {

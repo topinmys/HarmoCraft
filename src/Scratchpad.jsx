@@ -8,7 +8,7 @@ const Scratchpad = ({ scratchpadString, acceptIdea, rejectIdea }) => {
       const abcString = `X:1\nM:4/4\nL:1/4\nK:C\n${scratchpadDisplay}`;
       abcjs.renderAbc("scratchpad-paper", abcString, {
         responsive: "resize",
-        scale: 0.8,
+        scale: 0.45,
       });
     }
   }, [scratchpadString]);
@@ -21,22 +21,20 @@ const Scratchpad = ({ scratchpadString, acceptIdea, rejectIdea }) => {
         background: "#f7fafc",
         border: "2px dashed #cbd5e0",
         borderRadius: "10px",
-        padding: "20px",
+        padding: "15px",
         marginBottom: "20px",
         position: "relative",
         width: "100%",
-        maxWidth: "700px",
-        margin: "0 auto",
+        boxSizing: "border-box",
+        overflowX: "hidden",
       }}
     >
-      <h3 style={{ marginTop: 0, color: "#4a5568", fontSize: "16px" }}>
+      <h3 style={{ marginTop: 0, color: "#4a5568", fontSize: "15px" }}>
         ✨ Inspiration Board
       </h3>
 
-      {/* The canvas for the scratchpad sheet music */}
       <div id="scratchpad-paper"></div>
 
-      {/* Accept / Reject Buttons */}
       <div
         style={{
           display: "flex",
