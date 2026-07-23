@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import abcjs from "abcjs";
 
-const SheetMusic = ({ melody, selectedKey }) => {
+const SheetMusic = ({ melody, selectedKey, chord }) => {
   // create reference to an empty HTML div
   const paperRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -11,12 +11,19 @@ const SheetMusic = ({ melody, selectedKey }) => {
   useEffect(() => {
     const init = async () => {
       const abcKey = selectedKey && selectedKey.includes("G Major") ? "G" : "C";
+      const melodyBars = melody.split("|");
+      const abcMelody = melodyBars
+        .map((bar, i) => {
+          const c = chord[i];
+          return c ? `"${c}" ${bar}` : bar;
+        })
+        .join(" | ");
       const abcString = `X:1
 T:HarmoCraft Sandbox
 M:4/4
 L:1/4
 K:${abcKey}
-${melody}`;
+${abcMelody}`;
 
       // tell abcjs to draw the string onto our referenced div
       const visualObj = abcjs.renderAbc(paperRef.current, abcString, {

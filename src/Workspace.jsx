@@ -720,7 +720,11 @@ export default function Workspace({ setView, user }) {
               boxSizing: "border-box",
             }}
           >
-            <SheetMusic melody={displayString} selectedKey={selectedKey} />
+            <SheetMusic
+              chord={activeProgression}
+              melody={displayString}
+              selectedKey={selectedKey}
+            />
           </div>
 
           <div
