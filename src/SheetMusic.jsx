@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import abcjs from "abcjs";
 
-const SheetMusic = ({ melody, selectedKey, chord }) => {
+const SheetMusic = ({ melody, selectedKey, chord, songTitle }) => {
   // create reference to an empty HTML div
   const paperRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -19,7 +19,7 @@ const SheetMusic = ({ melody, selectedKey, chord }) => {
         })
         .join(" | ");
       const abcString = `X:1
-T:HarmoCraft Sandbox
+T:${songTitle}
 M:4/4
 L:1/4
 K:${abcKey}

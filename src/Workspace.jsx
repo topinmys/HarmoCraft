@@ -45,7 +45,7 @@ const playSynthNote = (noteName) => {
   oscillator.stop(audioCtx.currentTime + 1.5);
 };
 
-export default function Workspace({ setView, user }) {
+export default function Workspace({ setView, user, info }) {
   const [activeNote, setActiveNote] = useState("None");
   const [melodyString, setMelodyString] = useState("");
   const [selectedKey, setSelectedKey] = useState("C Major");
@@ -58,41 +58,56 @@ export default function Workspace({ setView, user }) {
   const [isTipVisible, setIsTipVisible] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [songTitle, setSongTitle] = useState("");
+  const [songTitle, setSongTitle] = useState("HarmoCraft Sandbox");
 
   //fetch data from last time
   useEffect(() => {
-    const fetchData = async () => {
+    console.log("use effect");
+    console.log(info);
+
+    if (info) {
+      console.log("used info");
+      console.log(info);
+      setMelodyString(info.melody);
+      setSelectedKey(info.key_signature);
+      setSelectedStyle(info.progression_style);
+      setSongTitle(info.melody_name);
+      return;
+    }
+
+    const fetchUnsaved = async () => {
       const { data, error } = await supabase
         .from("melodies")
-        .select("melody")
+        .select("*")
         .eq("user_id", user.id)
+        .eq("melody_name", songTitle)
         .maybeSingle();
 
-      if (!data) {
-        const { data: newData, error: err } = await supabase
+      if (data) {
+        console.log("fetched");
+        setMelodyString(data.melody);
+        setSelectedKey(data.key_signature);
+        setSelectedStyle(data.progression_style);
+      } else {
+        console.log("created")
+        const { data, error } = await supabase
           .from("melodies")
           .insert([
             {
               user_id: user.id,
               melody: "",
+              melody_name: songTitle,
+              key_signature: selectedKey,
+              progression_style: selectedStyle,
             },
           ])
           .select()
           .single();
-
-        if (err) {
-          console.error(err);
-          return;
-        }
-
-        setMelodyString(newData.melody);
-      } else {
         setMelodyString(data.melody);
       }
     };
 
-    fetchData();
+    fetchUnsaved();
   }, []);
 
   //autosave after 1 sec
@@ -104,8 +119,10 @@ export default function Workspace({ setView, user }) {
           melody: melodyString,
           key_signature: selectedKey,
           progression_style: selectedStyle,
+          last_saved: new Date().toISOString(),
         })
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .eq("melody_name", songTitle);
 
       if (error) {
         console.log(error);
@@ -396,7 +413,7 @@ export default function Workspace({ setView, user }) {
     setCoachTip("");
   };
 
-  const handleSaveAs = () => {
+  const handleSaveAs = async () => {
     if (!songTitle.trim()) {
       setWarningMessage("⚠️ Please enter a title for your song!");
       return;
@@ -404,6 +421,18 @@ export default function Workspace({ setView, user }) {
 
     // HERE!!!! add supabase INSERT logic here using songTitle and melodyString
     console.log(`Handing off to database: ${songTitle}`);
+    const { error } = await supabase
+      .from("melodies")
+      .update({
+        melody_name: songTitle,
+        last_saved: new Date().toISOString(),
+      })
+      .eq("user_id", user.id)
+      .eq("melody_name", "HarmoCraft Sandbox");
+
+    if (error) {
+      console.log(error);
+    }
 
     // close modal and reset after save as
     setShowSaveModal(false);
@@ -724,6 +753,7 @@ export default function Workspace({ setView, user }) {
               chord={activeProgression}
               melody={displayString}
               selectedKey={selectedKey}
+              songTitle={songTitle}
             />
           </div>
 

@@ -12,6 +12,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState("home");
+  const [currentProject, setCurrentProject] = useState(null);
 
   useEffect(() => {
     const getSession = async () => {
@@ -64,10 +65,10 @@ function App() {
         <Home setView={setCurrentView} onLogout={handleLogout} />
       )}
       {currentView === "workspace" && (
-        <Workspace setView={setCurrentView} user={session?.user} />
+        <Workspace setView={setCurrentView} user={session?.user} info={currentProject} />
       )}
       {currentView === "profile" && (
-        <Profile setView={setCurrentView} user={session?.user} />
+        <Profile setView={setCurrentView} user={session?.user} setCurrentProject={setCurrentProject} />
       )}
     </div>
   );
