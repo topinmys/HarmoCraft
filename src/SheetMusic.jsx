@@ -29,10 +29,10 @@ ${abcMelody}`;
       const visualObj = abcjs.renderAbc(paperRef.current, abcString, {
         add_classes: true,
         scale: 0.9,
+        responsive: "resize",
         foregroundColor: "#2d3748",
         paddingtop: 15,
         paddingbottom: 15,
-        staffwidth: 680,
         wrap: {
           minSpacing: 1.5,
           maxSpacing: 2.7,
@@ -54,7 +54,7 @@ ${abcMelody}`;
       });
 
       await synthRef.current.prime();
-    }
+    };
     init();
   }, [melody, selectedKey]);
 
@@ -70,17 +70,21 @@ ${abcMelody}`;
         padding: "20px",
         borderRadius: "12px",
         boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-        marginBottom: "40px",
-        width: "700px",
+        margin: "0",
+        width: "100%",
+        height: "100%",
         boxSizing: "border-box",
-        height: "350px",
         overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
       }}
     >
-      <div ref={paperRef}></div>
+      <div ref={paperRef} style={{ width: "100%" }}></div>
       <div
         style={{
-          paddingTop: "5px",
+          paddingTop: "15px",
           paddingBottom: "10px",
           display: "flex",
           justifyContent: "center",
@@ -90,7 +94,7 @@ ${abcMelody}`;
           className="toolbar-btn"
           onClick={() => handlePlayBack()}
           style={{
-            padding: "10px 10px",
+            padding: "10px 20px",
             borderRadius: "8px",
             cursor: "pointer",
             fontWeight: "bold",
