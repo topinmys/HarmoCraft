@@ -56,7 +56,7 @@ ${abcMelody}`;
       await synthRef.current.prime();
     };
     init();
-  }, [melody, selectedKey]);
+  }, [melody, selectedKey, songTitle]);
 
   const handlePlayBack = async () => {
     await audioContextRef.current.resume();

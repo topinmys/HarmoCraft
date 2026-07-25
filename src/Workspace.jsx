@@ -45,7 +45,7 @@ const playSynthNote = (noteName) => {
   oscillator.stop(audioCtx.currentTime + 1.5);
 };
 
-export default function Workspace({ setView, user, info }) {
+export default function Workspace({ setView, user, setCurrentProject, currentProject }) {
   const [activeNote, setActiveNote] = useState("None");
   const [melodyString, setMelodyString] = useState("");
   const [selectedKey, setSelectedKey] = useState("C Major");
@@ -59,19 +59,20 @@ export default function Workspace({ setView, user, info }) {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [songTitle, setSongTitle] = useState("HarmoCraft Sandbox");
+  const [refresh, setRefresh] = useState(false);
 
   //fetch data from last time
   useEffect(() => {
     console.log("use effect");
-    console.log(info);
+    console.log(currentProject);
 
-    if (info) {
+    if (currentProject) {
       console.log("used info");
-      console.log(info);
-      setMelodyString(info.melody);
-      setSelectedKey(info.key_signature);
-      setSelectedStyle(info.progression_style);
-      setSongTitle(info.melody_name);
+      console.log(currentProject);
+      setMelodyString(currentProject.melody);
+      setSelectedKey(currentProject.key_signature);
+      setSelectedStyle(currentProject.progression_style);
+      setSongTitle(currentProject.melody_name);
       return;
     }
 
@@ -108,7 +109,7 @@ export default function Workspace({ setView, user, info }) {
     };
 
     fetchUnsaved();
-  }, []);
+  }, [refresh]);
 
   //autosave after 1 sec
   useEffect(() => {
@@ -130,7 +131,7 @@ export default function Workspace({ setView, user, info }) {
     }, 1000);
 
     return () => clearTimeout(time);
-  }, [melodyString, selectedKey, selectedStyle]);
+  }, [melodyString, selectedKey, selectedStyle, refresh]);
 
   // toast notification fader logic
   useEffect(() => {
@@ -421,22 +422,30 @@ export default function Workspace({ setView, user, info }) {
 
     // HERE!!!! add supabase INSERT logic here using songTitle and melodyString
     console.log(`Handing off to database: ${songTitle}`);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("melodies")
       .update({
         melody_name: songTitle,
         last_saved: new Date().toISOString(),
       })
       .eq("user_id", user.id)
-      .eq("melody_name", "HarmoCraft Sandbox");
+      .eq("melody_name", "HarmoCraft Sandbox")
+      .select()
+      .single();
 
     if (error) {
       console.log(error);
     }
 
+    setCurrentProject(data);
+    setRefresh(!refresh);
+    console.log("this is current project");
+    console.log(currentProject);
+    console.log("this is data");
+    console.log(data);
+
     // close modal and reset after save as
     setShowSaveModal(false);
-    setSongTitle("");
     setWarningMessage("");
     setCoachTip(`🎉 Successfully saved "${songTitle}" to your Library!`);
   };
@@ -479,7 +488,10 @@ export default function Workspace({ setView, user, info }) {
           </button>
           <button
             style={{ fontSize: "14px", padding: "6px 12px" }}
-            onClick={() => setView("home")}
+            onClick={() => {
+              setCurrentProject(null);
+              setView("home");
+            }}
             className="secondary-btn"
           >
             ← Back to Home

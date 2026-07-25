@@ -104,7 +104,10 @@ function Profile({ setView, user, setCurrentProject }) {
       >
         <h1 style={{ margin: 0, color: "#2d3748" }}>User Profile</h1>
         <button
-          onClick={() => setView("home")}
+          onClick={() => {
+            setCurrentProject(null);
+            setView("home");
+          }}
           className="secondary-btn"
           style={{ padding: "8px 16px", fontSize: "14px" }}
         >
