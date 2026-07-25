@@ -65,7 +65,7 @@ function App() {
         <Home setView={setCurrentView} onLogout={handleLogout} />
       )}
       {currentView === "workspace" && (
-        <Workspace setView={setCurrentView} user={session?.user} info={currentProject} />
+        <Workspace setView={setCurrentView} user={session?.user} setCurrentProject={setCurrentProject} currentProject={currentProject} />
       )}
       {currentView === "profile" && (
         <Profile setView={setCurrentView} user={session?.user} setCurrentProject={setCurrentProject} />
