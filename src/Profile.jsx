@@ -1,25 +1,82 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "./supabase_client";
 
-function Profile({ setView, user }) {
+function Profile({ setView, user, setCurrentProject }) {
+  const [songs, setSongs] = useState([]);
+  const [newTitle, setNewTitle] = useState("untitle");
+  const [refresh, setRefresh] = useState(false);
+
+  useEffect(() => {
+    console.log("use effect");
+    const fetchData = async () => {
+      const { data } = await supabase
+        .from("melodies")
+        .select("*")
+        .eq("user_id", user.id)
+        .neq("melody_name", "HarmoCraft Sandbox")
+
+      console.log(data);
+
+      if (data) {
+        setSongs(data);
+      }
+    };
+
+    fetchData();
+  }, [refresh]);
+
+  const handleOpen = 0;
+
+  const handleDelete = async (id) => {
+    const { error } = await supabase
+      .from("melodies")
+      .delete()
+      .eq("id", id)
+
+    if (error) {
+      console.log(error);
+    }
+
+    setRefresh(!refresh);
+  };
+
+  const handleRename = async (song) => {
+    const { error } = await supabase
+      .from("melodies")
+      .update({
+        "melody_name": newTitle,
+      })
+      .eq("user_id", user.id)
+      .eq("melody_name", song.melody_name)
+
+    if (error) {
+      console.log(error);
+    }
+
+    setRefresh(!refresh);
+  };
+
+  const handleExport = 0;
+
   // MOCK DATA!!!!
   const mockSongs = [
     {
       id: 1,
-      title: "Midnight Jazz",
+      melody_name: "Midnight Jazz",
       key_signature: "C Major",
       progression_style: "Jazz / R&B",
       date: "July 23, 2026",
     },
     {
       id: 2,
-      title: "Pop Anthem Draft",
+      melody_name: "Pop Anthem Draft",
       key_signature: "G Major",
       progression_style: "Pop",
       date: "July 22, 2026",
     },
     {
       id: 3,
-      title: "Sad Piano Intro",
+      melody_name: "Sad Piano Intro",
       key_signature: "C Major",
       progression_style: "Melancholy",
       date: "July 21, 2026",
@@ -70,7 +127,7 @@ function Profile({ setView, user }) {
           <strong>Email:</strong> {user?.email || "Guest"}
         </p>
         <p style={{ margin: "5px 0", color: "#4a5568", fontSize: "16px" }}>
-          <strong>Saved Melodies:</strong> {mockSongs.length}
+          <strong>Saved Melodies:</strong> {songs.length}
         </p>
       </div>
 
@@ -95,7 +152,7 @@ function Profile({ setView, user }) {
             gap: "20px",
           }}
         >
-          {mockSongs.map((song) => (
+          {songs.map((song) => (
             <div
               key={song.id}
               style={{
@@ -118,7 +175,7 @@ function Profile({ setView, user }) {
                     fontSize: "18px",
                   }}
                 >
-                  {song.title}
+                  {song.melody_name}
                 </h3>
                 <p
                   style={{
@@ -137,7 +194,7 @@ function Profile({ setView, user }) {
                     color: "#a0aec0",
                   }}
                 >
-                  Last saved: {song.date}
+                  Last saved: {(new Date(song.last_saved)).toLocaleDateString("en-CA")}
                 </p>
               </div>
 
@@ -151,6 +208,10 @@ function Profile({ setView, user }) {
                 }}
               >
                 <button
+                  onClick={() => {
+                    setCurrentProject(song);
+                    setView("workspace");
+                  }}
                   className="primary-btn"
                   style={{
                     padding: "8px",
@@ -162,6 +223,7 @@ function Profile({ setView, user }) {
                   Open
                 </button>
                 <button
+                  onClick={() => handleRename(song)}
                   className="btn-light"
                   style={{
                     padding: "8px",
@@ -174,6 +236,7 @@ function Profile({ setView, user }) {
                   Rename
                 </button>
                 <button
+                  onClick={() => handleExport(song)}
                   className="btn-neutral"
                   style={{
                     padding: "8px",
@@ -186,6 +249,7 @@ function Profile({ setView, user }) {
                   Export
                 </button>
                 <button
+                  onClick={() => handleDelete(song.id)}
                   className="btn-danger"
                   style={{
                     padding: "8px",
