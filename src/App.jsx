@@ -5,6 +5,7 @@ import Login from "./Login";
 import Workspace from "./Workspace";
 import Home from "./Home";
 import Profile from "./Profile";
+import EarTraining from "./EarTraining";
 import { supabase } from "./supabase_client";
 
 function App() {
@@ -65,10 +66,22 @@ function App() {
         <Home setView={setCurrentView} onLogout={handleLogout} />
       )}
       {currentView === "workspace" && (
-        <Workspace setView={setCurrentView} user={session?.user} setCurrentProject={setCurrentProject} currentProject={currentProject} />
+        <Workspace
+          setView={setCurrentView}
+          user={session?.user}
+          setCurrentProject={setCurrentProject}
+          currentProject={currentProject}
+        />
       )}
       {currentView === "profile" && (
-        <Profile setView={setCurrentView} user={session?.user} setCurrentProject={setCurrentProject} />
+        <Profile
+          setView={setCurrentView}
+          user={session?.user}
+          setCurrentProject={setCurrentProject}
+        />
+      )}
+      {currentView === "ear-training" && (
+        <EarTraining setView={setCurrentView} />
       )}
     </div>
   );

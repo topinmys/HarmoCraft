@@ -61,11 +61,13 @@ export default function Workspace({
   const [coachTip, setCoachTip] = useState("");
   const [history, setHistory] = useState([]);
   const [isTipVisible, setIsTipVisible] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [songTitle, setSongTitle] = useState("HarmoCraft Sandbox");
   const [refresh, setRefresh] = useState(false);
   const [isHarmonized, setIsHarmonized] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    return localStorage.getItem("hideHarmoCraftWelcome") !== "true";
+  });
 
   //fetch data from last time
   useEffect(() => {

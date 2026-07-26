@@ -158,6 +158,10 @@ const SheetMusic = ({
         },
       });
 
+      // ensure doesnt try to play any chord symbols
+      const audioAbcString = abcString.replace(/"[^"]*"/g, "");
+      const audioObj = abcjs.renderAbc("*", audioAbcString)[0];
+
       if (!audioContextRef.current) {
         audioContextRef.current = new AudioContext();
       }
@@ -166,7 +170,7 @@ const SheetMusic = ({
 
       await synthRef.current.init({
         audioContext: audioContextRef.current,
-        visualObj: visualObj[0],
+        visualObj: audioObj,
         options: { chnParams: { 1: { vol: 0.7 } } },
       });
 
