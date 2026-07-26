@@ -46,8 +46,12 @@ const blackKeys = [
   { name: "A#5", position: 20 },
 ];
 
-const Piano = ({ handleKeyClick, tier1 = [], tier2 = [] }) => {
+const Piano = ({ handleKeyClick, tier1 = [], tier2 = [], activeNote }) => {
   const getColor = (note, isBlackKey) => {
+    if (activeNote && note === activeNote) {
+      return isBlackKey ? "#1e3a8a" : "#93c5fd";
+    }
+
     const baseNote = note.replace(/[0-9]/g, "");
 
     if (tier1.includes(baseNote)) {
@@ -59,6 +63,7 @@ const Piano = ({ handleKeyClick, tier1 = [], tier2 = [] }) => {
 
     return isBlackKey ? "#111" : "white";
   };
+
   return (
     <div className="piano-container">
       <div className="piano-keyboard">
