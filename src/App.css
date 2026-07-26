@@ -9,6 +9,7 @@
   min-width: 1250px;
   box-sizing: border-box;
 }
+
 .app-container h1 {
   color: #222;
   margin: 0;
@@ -212,6 +213,7 @@
   border: 1px solid #ccc;
   transition: background-color 0.2s ease;
 }
+
 .btn-generate:hover {
   background-color: #edf2f7;
 }
@@ -222,6 +224,7 @@
   border: none;
   transition: background-color 0.2s ease;
 }
+
 .btn-danger:hover {
   background-color: #c53030;
 }
@@ -232,6 +235,7 @@
   border: none;
   transition: background-color 0.2s ease;
 }
+
 .btn-neutral:hover {
   background-color: #4a5568;
 }
@@ -242,6 +246,7 @@
   border: 1px solid #cbd5e0;
   transition: background-color 0.2s ease;
 }
+
 .btn-light:hover {
   background-color: #e2e8f0;
 }
@@ -252,6 +257,7 @@
   border: 1px solid #cbd5e0;
   transition: all 0.2s ease;
 }
+
 .btn-duration-inactive:hover {
   background-color: #edf2f7;
   border-color: #a0aec0;
@@ -419,4 +425,10 @@ input:-webkit-autofill:focus {
     sans-serif !important;
   font-weight: 600 !important;
   fill: #2d3748 !important;
+}
+
+.abcjs-highlight {
+  fill: #e53e3e !important;
+  stroke: #e53e3e !important;
+  transition: fill 0.1s ease;
 }

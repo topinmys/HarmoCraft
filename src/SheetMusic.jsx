@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import abcjs from "abcjs";
+import React, { useEffect, useRef, useState } from "react";
+import abcjs, { synth } from "abcjs";
 import { chordDictionary } from "./musicTheory";
 
 // helper function to determine how busy a melody bar is
@@ -24,14 +24,34 @@ const SheetMusic = ({
   const paperRef = useRef(null);
   const audioContextRef = useRef(null);
   const synthRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const timingCallbacksRef = useRef(null);
+
+  const clearHighlights = () => {
+    if (paperRef.current) {
+      const highlighted = paperRef.current.querySelectorAll(".abcjs-highlight");
+      highlighted.forEach((e) => e.classList.remove("abcjs-highlight"));
+    }
+  };
 
   // use useEffect so it only draws after the screen loads
   useEffect(() => {
+    let isCancelled = false;
+
     const init = async () => {
       // stop any existing synth before building a new one to prevent overlaps
       if (synthRef.current) {
         synthRef.current.stop();
+        synthRef.current = null;
       }
+
+      if (timingCallbacksRef.current) {
+        timingCallbacksRef.current.stop();
+        timingCallbacksRef.current = null;
+      }
+
+      clearHighlights();
+      setIsPlaying(false);
 
       const abcKey = selectedKey && selectedKey.includes("G Major") ? "G" : "C";
 
@@ -156,7 +176,7 @@ const SheetMusic = ({
           maxSpacing: 2.7,
           preferredMeasuresPerLine: 4,
         },
-      });
+      })[0];
 
       // ensure doesnt try to play any chord symbols
       const audioAbcString = abcString.replace(/"[^"]*"/g, "");
@@ -166,33 +186,101 @@ const SheetMusic = ({
         audioContextRef.current = new AudioContext();
       }
       await abcjs.synth.supportsAudio();
-      synthRef.current = new abcjs.synth.CreateSynth();
+      const synth = new abcjs.synth.CreateSynth();
 
-      await synthRef.current.init({
-        audioContext: audioContextRef.current,
-        visualObj: audioObj,
-        options: { chnParams: { 1: { vol: 0.7 } } },
-      });
+      try {
+        await synth.init({
+          audioContext: audioContextRef.current,
+          visualObj: audioObj,
+          options: {
+            chnParams: { 1: { vol: 0.7 } },
+            onEnded: () => {
+              if (!isCancelled) {
+                setIsPlaying(false);
+                clearHighlights();
+                if (timingCallbacksRef.current) {
+                  timingCallbacksRef.current.stop();
+                }
+              }
+            },
+          },
+        });
 
-      await synthRef.current.prime();
+        await synth.prime();
+
+        const timingCallbacks = new abcjs.TimingCallbacks(visualObj, {
+          eventCallback: (e) => {
+            if (!e) {
+              return;
+            }
+
+            clearHighlights();
+
+            if (e.elements) {
+              e.elements.forEach((group) => {
+                group.forEach((e) => {
+                  if (e) {
+                    e.classList.add("abcjs-highlight");
+                  }
+                });
+              });
+            }
+          },
+        });
+
+        if (!isCancelled) {
+          synthRef.current = synth;
+          timingCallbacksRef.current = timingCallbacks;
+        }
+      } catch (error) {
+        console.error("Audio initialization failed: ", error);
+      }
     };
+
     init();
 
     // ensure synth stops when the component updates
     return () => {
+      isCancelled = true;
       if (synthRef.current) {
         synthRef.current.stop();
       }
+
+      if (timingCallbacksRef.current) {
+        timingCallbacksRef.current.stop();
+      }
+
+      clearHighlights();
     };
   }, [melody, selectedKey, songTitle, selectedStyle, isHarmonized]);
 
   const handlePlayBack = async () => {
     // stop the previous track before starting a new one to prevent overlap
-    if (synthRef.current) {
-      synthRef.current.stop();
+    if (!synthRef.current || !audioContextRef.current) {
+      return;
     }
-    await audioContextRef.current.resume();
+
+    if (isPlaying) {
+      synthRef.current.stop();
+
+      if (timingCallbacksRef.current) {
+        timingCallbacksRef.current.stop();
+      }
+
+      clearHighlights();
+      setIsPlaying(false);
+      return;
+    }
+
+    if (audioContextRef.current.state == "suspended") {
+      await audioContextRef.current.resume();
+    }
+
     synthRef.current.start();
+    if (timingCallbacksRef.current) {
+      timingCallbacksRef.current.start();
+    }
+    setIsPlaying(true);
   };
 
   return (
@@ -233,7 +321,7 @@ const SheetMusic = ({
             boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
           }}
         >
-          ▶ Play
+          {isPlaying ? "⏸Stop" : "▶ Play"}
         </button>
       </div>
     </div>
