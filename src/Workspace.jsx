@@ -45,7 +45,12 @@ const playSynthNote = (noteName) => {
   oscillator.stop(audioCtx.currentTime + 1.5);
 };
 
-export default function Workspace({ setView, user, setCurrentProject, currentProject }) {
+export default function Workspace({
+  setView,
+  user,
+  setCurrentProject,
+  currentProject,
+}) {
   const [activeNote, setActiveNote] = useState("None");
   const [melodyString, setMelodyString] = useState("");
   const [selectedKey, setSelectedKey] = useState("C Major");
@@ -60,6 +65,7 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [songTitle, setSongTitle] = useState("HarmoCraft Sandbox");
   const [refresh, setRefresh] = useState(false);
+  const [isHarmonized, setIsHarmonized] = useState(false);
 
   //fetch data from last time
   useEffect(() => {
@@ -90,7 +96,7 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
         setSelectedKey(data.key_signature);
         setSelectedStyle(data.progression_style);
       } else {
-        console.log("created")
+        console.log("created");
         const { data, error } = await supabase
           .from("melodies")
           .insert([
@@ -157,6 +163,7 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
 
   // function to handle key clicks
   const handleKeyClick = (note) => {
+    setIsHarmonized(false);
     const translated = abcMapper[note];
     if (!translated) return;
 
@@ -234,6 +241,7 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
   };
 
   const handleRest = () => {
+    setIsHarmonized(false);
     if (melodyString.includes("*")) {
       setHistory((prev) => [...prev, melodyString]);
 
@@ -276,6 +284,7 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
 
   // steps back one move in time
   const handleUndo = () => {
+    setIsHarmonized(false);
     setWarningMessage("");
     // if history is empty, do nothing
     if (history.length === 0) return;
@@ -292,6 +301,7 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
 
   // function to reset the entire composition
   const handleReset = () => {
+    setIsHarmonized(false);
     setMelodyString("");
     setActiveNote("None");
     setWarningMessage("");
@@ -766,6 +776,8 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
               melody={displayString}
               selectedKey={selectedKey}
               songTitle={songTitle}
+              selectedStyle={selectedStyle}
+              isHarmonized={isHarmonized}
             />
           </div>
 
@@ -806,20 +818,42 @@ export default function Workspace({ setView, user, setCurrentProject, currentPro
             zIndex: 1,
           }}
         >
-          <button
-            className="btn-generate"
-            onClick={generateStarterIdea}
-            style={{
-              padding: "12px",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-              width: "100%",
-            }}
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
           >
-            ✨ Generate Starter Idea
-          </button>
+            <button
+              onClick={() => setIsHarmonized(!isHarmonized)}
+              style={{
+                padding: "12px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                background: isHarmonized ? "#e2e8f0" : "#48bb78",
+                color: isHarmonized ? "#2d3748" : "white",
+                border: "none",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                width: "100%",
+                transition: "all 0.2s ease-in-out",
+              }}
+            >
+              {isHarmonized ? "🎵 Hide Accompaniment" : "🎶 Auto-Harmonize"}
+            </button>
+
+            <button
+              className="btn-generate"
+              onClick={generateStarterIdea}
+              style={{
+                padding: "12px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                width: "100%",
+              }}
+            >
+              ✨ Generate Starter Idea
+            </button>
+          </div>
 
           <Toolbar
             activeChord={activeChord}
