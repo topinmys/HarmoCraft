@@ -288,3 +288,43 @@ export const motifLibrary = {
 
 export const tier1 = ["C", "E", "G"];
 export const tier2 = ["D", "F", "A", "B"];
+
+// suggestion engine
+export const getNoteSuggestions = (chord, keyName) => {
+  // if the song is over or there is no active chord, return empty arrays
+  if (!chord || chord === "-") return { tier1: [], tier2: [] };
+
+  // tier 1: gold notes (chord tones)
+  const tier1 = chordDictionary[chord] || [];
+
+  // tier 2: silver notes (passing scale tones)
+  // take full scale and filter out  tier 1 notes so they don't overlap
+  const currentScale = keySignatures[keyName] || [];
+  const tier2 = currentScale.filter((note) => !tier1.includes(note));
+
+  return { tier1, tier2 };
+};
+
+// counts true musical beats instead of just clicks
+export const calculateBeats = (abcString) => {
+  // Matches all notes/rests including accidentals (^C) and durations (C2, z/2)
+  const tokens = abcString.match(/[\^_=]?[a-zA-Zz][,'0-9]*(\/[0-9]+)?/g) || [];
+  let beats = 0;
+  tokens.forEach((token) => {
+    if (token.includes("/2")) beats += 0.5;
+    else if (token.includes("2")) beats += 2;
+    else beats += 1;
+  });
+  return beats;
+};
+
+// get current active chord
+export const getActiveChord = (currentBeats, progressionArray) => {
+  const currentMeasureIndex = Math.floor(currentBeats / 4);
+
+  if (currentMeasureIndex >= progressionArray.length) {
+    return null;
+  }
+
+  return progressionArray[currentMeasureIndex];
+};
