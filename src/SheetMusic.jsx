@@ -1,8 +1,26 @@
 import React, { useEffect, useRef } from "react";
 import abcjs from "abcjs";
+import { chordDictionary } from "./musicTheory";
 
-const SheetMusic = ({ melody, selectedKey, chord, songTitle }) => {
-  // create reference to an empty HTML div
+// helper function to determine how busy a melody bar is
+const getMelodyDensity = (barString) => {
+  const notes = barString.match(/[a-gA-G]/g);
+  const noteCount = notes ? notes.length : 0;
+
+  if (noteCount <= 2) return "Calm";
+  if (noteCount <= 4) return "Steady";
+  return "Busy";
+};
+
+const SheetMusic = ({
+  melody,
+  selectedKey,
+  chord,
+  songTitle,
+  selectedStyle,
+  isHarmonized,
+}) => {
+  // create reference to an empty html div
   const paperRef = useRef(null);
   const audioContextRef = useRef(null);
   const synthRef = useRef(null);
@@ -10,20 +28,120 @@ const SheetMusic = ({ melody, selectedKey, chord, songTitle }) => {
   // use useEffect so it only draws after the screen loads
   useEffect(() => {
     const init = async () => {
+      // stop any existing synth before building a new one to prevent overlaps
+      if (synthRef.current) {
+        synthRef.current.stop();
+      }
+
       const abcKey = selectedKey && selectedKey.includes("G Major") ? "G" : "C";
-      const melodyBars = melody.split("|");
-      const abcMelody = melodyBars
-        .map((bar, i) => {
-          const c = chord[i];
-          return c ? `"${c}" ${bar}` : bar;
-        })
-        .join(" | ");
-      const abcString = `X:1
-T:${songTitle}
-M:4/4
-L:1/4
-K:${abcKey}
-${abcMelody}`;
+
+      // clean up the melody and split into array
+      const cleanMelody = melody.replace(/\n/g, "").trim();
+      let melodyBars = cleanMelody.split("|").map((b) => b.trim());
+      if (melodyBars[melodyBars.length - 1] === "") melodyBars.pop();
+      const numBars = melodyBars.length;
+
+      let header = `X:1\nT:${songTitle}\nM:4/4\nL:1/4\nK:${abcKey}\nQ:1/4=100\n%%MIDI chordvol 0\n`;
+      if (isHarmonized) {
+        header += `%%score (V1 V2)\nV:1 clef=treble \nV:2 clef=bass \n`;
+      }
+
+      let scoreString = "";
+
+      // process the music in chunks of 4 bars per visual line
+      for (let i = 0; i < numBars; i += 4) {
+        let topLine = "";
+        let bottomLine = "";
+
+        // build 4 bars at a time
+        for (let j = 0; j < 4; j++) {
+          const barIndex = i + j;
+          if (barIndex >= numBars) break;
+
+          const currentChordName = chord[barIndex];
+          const currentBarString = melodyBars[barIndex] || "";
+
+          // top line (melody)
+          const chordStr =
+            currentChordName && currentChordName !== "-"
+              ? `"${currentChordName}" `
+              : "";
+          topLine += `${chordStr}${currentBarString} | `;
+
+          // bottom line (smart bass)
+          if (isHarmonized) {
+            if (
+              !currentChordName ||
+              currentChordName === "-" ||
+              !currentBarString
+            ) {
+              bottomLine += "z4 | ";
+            } else {
+              const notes = chordDictionary[currentChordName] || [
+                "C",
+                "E",
+                "G",
+              ];
+
+              // set up natural piano voicings
+              const rootDeep = notes[0] + ",,";
+              const root = notes[0] + ",";
+              const third = notes[1] + ",";
+              const fifth = notes[2] + ",";
+              const upperChord = `[${third}${fifth}]`;
+              const fullChord = `[${rootDeep}${third}${fifth}]`;
+
+              const density = getMelodyDensity(currentBarString);
+              const isEvenBar = barIndex % 2 === 0;
+
+              if (selectedStyle === "Pop") {
+                if (density === "Calm") {
+                  // 8th note rolling arpeggio
+                  bottomLine += `${rootDeep}/2${fifth}/2${root}/2${fifth}/2 ${rootDeep}/2${fifth}/2${root}/2${fifth}/2 | `;
+                } else if (density === "Steady") {
+                  // wider quaver arpeggio reaching to the third
+                  bottomLine += `${rootDeep}/2${fifth}/2${root}/2${third}/2 ${root}/2${fifth}/2${rootDeep}/2${fifth}/2 | `;
+                } else {
+                  // a sustained chord for busy melodies
+                  bottomLine += `${fullChord}4 | `;
+                }
+              } else if (selectedStyle === "Melancholy") {
+                if (density === "Calm" || density === "Steady") {
+                  // sweeping quaver arpeggios that rise and fall
+                  bottomLine += isEvenBar
+                    ? `${rootDeep}/2${third}/2${fifth}/2${root}/2 ${fifth}/2${third}/2${rootDeep}/2${fifth}/2 | `
+                    : `${rootDeep}/2${fifth}/2${root}/2${fifth}/2 ${rootDeep}/2${third}/2${fifth}/2${root}/2 | `;
+                } else {
+                  bottomLine += `${fullChord}4 | `;
+                }
+              } else if (selectedStyle === "Jazz / R&B") {
+                if (density === "Busy") {
+                  // smooth sustained shell voicing
+                  bottomLine += `${fullChord}4 | `;
+                } else {
+                  // syncopated jazz rhythm
+                  bottomLine += isEvenBar
+                    ? `${rootDeep}2 z/2 ${upperChord}/2 z | `
+                    : `z/2 ${upperChord}/2 z/2 ${upperChord}/2 ${rootDeep}2 | `;
+                }
+              } else {
+                bottomLine += `${fullChord}4 | `;
+              }
+            }
+          }
+        }
+
+        // stack the completely synced 4-bar blocks together
+        if (!isHarmonized) {
+          scoreString += `${topLine}\n`;
+        } else {
+          // inject the soft dynamic marker on the very first bass line
+          const volControl = i === 0 ? "!p! " : "";
+          scoreString += `[V:1] ${topLine}\n[V:2] ${volControl}${bottomLine}\n`;
+        }
+      }
+
+      const abcString = header + scoreString;
 
       // tell abcjs to draw the string onto our referenced div
       const visualObj = abcjs.renderAbc(paperRef.current, abcString, {
@@ -43,22 +161,32 @@ ${abcMelody}`;
       if (!audioContextRef.current) {
         audioContextRef.current = new AudioContext();
       }
-
       await abcjs.synth.supportsAudio();
-
       synthRef.current = new abcjs.synth.CreateSynth();
 
       await synthRef.current.init({
         audioContext: audioContextRef.current,
         visualObj: visualObj[0],
+        options: { chnParams: { 1: { vol: 0.7 } } },
       });
 
       await synthRef.current.prime();
     };
     init();
-  }, [melody, selectedKey, songTitle]);
+
+    // ensure synth stops when the component updates
+    return () => {
+      if (synthRef.current) {
+        synthRef.current.stop();
+      }
+    };
+  }, [melody, selectedKey, songTitle, selectedStyle, isHarmonized]);
 
   const handlePlayBack = async () => {
+    // stop the previous track before starting a new one to prevent overlap
+    if (synthRef.current) {
+      synthRef.current.stop();
+    }
     await audioContextRef.current.resume();
     synthRef.current.start();
   };
