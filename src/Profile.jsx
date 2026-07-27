@@ -203,7 +203,7 @@ function Profile({ setView, user, setCurrentProject }) {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns: "repeat(3, 1fr)",
                   gap: "10px",
                   marginTop: "auto",
                 }}
@@ -235,19 +235,6 @@ function Profile({ setView, user, setCurrentProject }) {
                   }}
                 >
                   Rename
-                </button>
-                <button
-                  onClick={() => handleExport(song)}
-                  className="btn-neutral"
-                  style={{
-                    padding: "8px",
-                    fontSize: "13px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Export
                 </button>
                 <button
                   onClick={() => openDeleteModal(song)}

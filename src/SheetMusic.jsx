@@ -283,8 +283,13 @@ const SheetMusic = ({
     setIsPlaying(true);
   };
 
+  const handleExport = () => {
+    window.print();
+  };
+
   return (
     <div
+      className="sheet-music-container"
       style={{
         background: "#fff",
         padding: "20px",
@@ -321,7 +326,20 @@ const SheetMusic = ({
             boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
           }}
         >
-          {isPlaying ? "⏸Stop" : "▶ Play"}
+          {isPlaying ? "⏸ Stop" : "▶ Play"}
+        </button>
+        <button
+          onClick={() => handleExport()}
+          className="toolbar-btn"
+          style={{
+            padding: "10px 20px",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            backgroundColor: "#4a5568",
+            color: "#fff",
+          }}>
+          🖨️ Export Sheet
         </button>
       </div>
     </div>
