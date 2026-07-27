@@ -7,6 +7,9 @@ import {
   chordDictionary,
   keySignatures,
   motifLibrary,
+  getNoteSuggestions,
+  calculateBeats,
+  getActiveChord,
 } from "./musicTheory";
 import Piano from "./Piano";
 import Scratchpad from "./Scratchpad";
@@ -17,46 +20,61 @@ import ABCJS from "abcjs";
 import { renderAbc } from "abcjs";
 
 const noteToMidi = {
-  "C3": 48,
-  "C#3": 49, "Db3": 49,
-  "D3": 50,
-  "D#3": 51, "Eb3": 51,
-  "E3": 52,
-  "F3": 53,
-  "F#3": 54, "Gb3": 54,
-  "G3": 55,
-  "G#3": 56, "Ab3": 56,
-  "A3": 57,
-  "A#3": 58, "Bb3": 58,
-  "B3": 59,
+  C3: 48,
+  "C#3": 49,
+  Db3: 49,
+  D3: 50,
+  "D#3": 51,
+  Eb3: 51,
+  E3: 52,
+  F3: 53,
+  "F#3": 54,
+  Gb3: 54,
+  G3: 55,
+  "G#3": 56,
+  Ab3: 56,
+  A3: 57,
+  "A#3": 58,
+  Bb3: 58,
+  B3: 59,
 
-  "C4": 60,
-  "C#4": 61, "Db4": 61,
-  "D4": 62,
-  "D#4": 63, "Eb4": 63,
-  "E4": 64,
-  "F4": 65,
-  "F#4": 66, "Gb4": 66,
-  "G4": 67,
-  "G#4": 68, "Ab4": 68,
-  "A4": 69,
-  "A#4": 70, "Bb4": 70,
-  "B4": 71,
+  C4: 60,
+  "C#4": 61,
+  Db4: 61,
+  D4: 62,
+  "D#4": 63,
+  Eb4: 63,
+  E4: 64,
+  F4: 65,
+  "F#4": 66,
+  Gb4: 66,
+  G4: 67,
+  "G#4": 68,
+  Ab4: 68,
+  A4: 69,
+  "A#4": 70,
+  Bb4: 70,
+  B4: 71,
 
-  "C5": 72,
-  "C#5": 73, "Db5": 73,
-  "D5": 74,
-  "D#5": 75, "Eb5": 75,
-  "E5": 76,
-  "F5": 77,
-  "F#5": 78, "Gb5": 78,
-  "G5": 79,
-  "G#5": 80, "Ab5": 80,
-  "A5": 81,
-  "A#5": 82, "Bb5": 82,
-  "B5": 83,
+  C5: 72,
+  "C#5": 73,
+  Db5: 73,
+  D5: 74,
+  "D#5": 75,
+  Eb5: 75,
+  E5: 76,
+  F5: 77,
+  "F#5": 78,
+  Gb5: 78,
+  G5: 79,
+  "G#5": 80,
+  Ab5: 80,
+  A5: 81,
+  "A#5": 82,
+  Bb5: 82,
+  B5: 83,
 
-  "C6": 84,
+  C6: 84,
 };
 
 let globalAudioContext = null;
@@ -68,21 +86,27 @@ const playSynthNote = async (note) => {
   }
 
   if (!globalAudioContext) {
-    globalAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    globalAudioContext = new (
+      window.AudioContext || window.webkitAudioContext
+    )();
   }
 
   if (globalAudioContext.state === "suspended") {
     await globalAudioContext.resume();
   }
 
-  ABCJS.synth.playEvent([
-    {
-      pitch: midi,
-      duration: 0.6,
-      volume: 80,
-      instrument: 0,
-    },
-  ], [], globalAudioContext.sampleRate);
+  ABCJS.synth.playEvent(
+    [
+      {
+        pitch: midi,
+        duration: 0.6,
+        volume: 80,
+        instrument: 0,
+      },
+    ],
+    [],
+    globalAudioContext.sampleRate,
+  );
 };
 
 export default function Workspace({
@@ -356,49 +380,8 @@ export default function Workspace({
     return "";
   };
 
-  // counts true musical beats instead of just clicks
-  const calculateBeats = (abcString) => {
-    // Matches all notes/rests including accidentals (^C) and durations (C2, z/2)
-    const tokens =
-      abcString.match(/[\^_=]?[a-zA-Zz][,'0-9]*(\/[0-9]+)?/g) || [];
-    let beats = 0;
-    tokens.forEach((token) => {
-      if (token.includes("/2")) beats += 0.5;
-      else if (token.includes("2")) beats += 2;
-      else beats += 1;
-    });
-    return beats;
-  };
-
   // if string isn't empty, they have started composing
   const hasStartedComposing = melodyString.trim().length > 0;
-
-  // get current active chord
-  const getActiveChord = (currentBeats, progressionArray) => {
-    const currentMeasureIndex = Math.floor(currentBeats / 4);
-
-    if (currentMeasureIndex >= progressionArray.length) {
-      return null;
-    }
-
-    return progressionArray[currentMeasureIndex];
-  };
-
-  // suggestion engine
-  const getNoteSuggestions = (chord, keyName) => {
-    // if the song is over or there is no active chord, return empty arrays
-    if (!chord || chord === "-") return { tier1: [], tier2: [] };
-
-    // tier 1: gold notes (chord tones)
-    const tier1 = chordDictionary[chord] || [];
-
-    // tier 2: silver notes (passing scale tones)
-    // take full scale and filter out  tier 1 notes so they don't overlap
-    const currentScale = keySignatures[keyName] || [];
-    const tier2 = currentScale.filter((note) => !tier1.includes(note));
-
-    return { tier1, tier2 };
-  };
 
   // swap all asterisks to 'C' just for the visual sheet music and math
   const displayString = melodyString.replace(/\*/g, "C");
