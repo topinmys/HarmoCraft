@@ -103,11 +103,14 @@ const SheetMusic = ({
                 "G",
               ];
 
+              const safeNotes = notes.map((n) =>
+                n.includes("#") ? "^" + n.replace("#", "") : n,
+              );
               // set up natural piano voicings
-              const rootDeep = notes[0] + ",,";
-              const root = notes[0] + ",";
-              const third = notes[1] + ",";
-              const fifth = notes[2] + ",";
+              const rootDeep = safeNotes[0] + ",,";
+              const root = safeNotes[0] + ",";
+              const third = safeNotes[1] + ",";
+              const fifth = safeNotes[2] + ",";
               const upperChord = `[${third}${fifth}]`;
               const fullChord = `[${rootDeep}${third}${fifth}]`;
 
@@ -338,7 +341,8 @@ const SheetMusic = ({
             fontWeight: "bold",
             backgroundColor: "#4a5568",
             color: "#fff",
-          }}>
+          }}
+        >
           🖨️ Export Sheet
         </button>
       </div>
